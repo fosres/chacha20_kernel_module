@@ -159,6 +159,21 @@ void block_function(unsigned int * state_orig,unsigned int * state)	{
 
 }
 
+void state_to_ksm(unsigned char *ksm,unsigned int * state)	{
+	
+	unsigned long long int i = 0;
+
+	unsigned long long int j = 0;
+
+	while ( i < 16 )	{
+		
+		memcpy(&ksm[j],&state[i],sizeof(unsigned int));
+
+		i++; j += 4;
+	}
+
+}
+
 static int __init chacha20_init(void)	{
 	
 	unsigned int * key = (unsigned int*)kzalloc(sizeof(unsigned int)*8,GFP_KERNEL);
@@ -193,24 +208,13 @@ static int __init chacha20_init(void)	{
 	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
 
 	chacha20_state_init(state,key,nonce,1);
-	
-	printk(KERN_ALERT "state before:");
-
-	i = 0;
-
-	while ( i < 16 )	{
-		
-		printk(KERN_ALERT "%.4x",state[i]);
-
-		i++;
-	}
 
 	block_function(state_orig,state);
+
+	i = 0;
 	
 	printk(KERN_ALERT "state after:");
 
-	i = 0;
-
 	while ( i < 16 )	{
 		
 		printk(KERN_ALERT "%.4x",state[i]);
@@ -218,7 +222,22 @@ static int __init chacha20_init(void)	{
 		i++;
 	}
 	
-	printk(KERN_ALERT "%.4x",state[15]);
+	unsigned char * ksm = (unsigned char*)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
+	
+	state_to_ksm(ksm,state);
+	
+	i = 0;
+	
+	printk(KERN_ALERT "Contents of ksm:");
+
+	while ( i < 64 )	{
+		
+		printk(KERN_ALERT "%.2x",ksm[i]);
+
+		i++;
+	}
+	
+	kfree(ksm);
 
 	kfree(state);
 
