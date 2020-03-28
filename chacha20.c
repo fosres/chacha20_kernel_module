@@ -62,11 +62,17 @@ void quarteround(unsigned int *a,unsigned int *b,unsigned int *c,unsigned int *d
 
 static int __init chacha20_init(void)	{
 	
-	unsigned int x = 0x7998bfda;
+	unsigned int a = 0x11111111;
 
-	unsigned int y = rotate_left(x,7);
+	unsigned int b = 0x01020304;
 
-	printk(KERN_ALERT "%.4x",y);
+	unsigned int c = 0x9b8d6f43;
+
+	unsigned int d = 0x01234567;
+
+	quarteround(&a,&b,&c,&d);
+
+	printk(KERN_ALERT "%.4x %.4x %.4x %.4x",a,b,c,d);	
 	
 	return 0;
 }
