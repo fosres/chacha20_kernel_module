@@ -1,0 +1,1 @@
+cmd_/home/tsalim/git/chacha20_kernel_module/chacha20.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000 -T ./scripts/module-common.lds  --build-id  -o /home/tsalim/git/chacha20_kernel_module/chacha20.ko /home/tsalim/git/chacha20_kernel_module/chacha20.o /home/tsalim/git/chacha20_kernel_module/chacha20.mod.o ;  true

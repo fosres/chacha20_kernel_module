@@ -37,7 +37,7 @@ unsigned int bit_count(unsigned int shift)	{
 
 }
 
-unsigned int rotate_left(unsigned int input,unsigned in shift)	{
+unsigned int rotate_left(unsigned int input,unsigned int shift)	{
 	
 	unsigned int extract = bit_count(shift) << (32 - shift);
 
@@ -50,7 +50,12 @@ unsigned int rotate_left(unsigned int input,unsigned in shift)	{
 }
 
 static int __init chacha20_init(void)	{
+	
+	unsigned int x = 0x7998bfda;
 
+	unsigned int y = rotate_left(x,7);
+
+	printk(KERN_ALERT "%.4x",y);
 	
 	return 0;
 }
@@ -59,3 +64,7 @@ static void __exit chacha20_exit(void)	{
 
 
 }
+
+module_init(chacha20_init);
+
+module_exit(chacha20_exit);
