@@ -49,6 +49,17 @@ unsigned int rotate_left(unsigned int input,unsigned int shift)	{
 
 }
 
+void quarteround(unsigned int *a,unsigned int *b,unsigned int *c,unsigned int *d)	{
+
+	*a += *b; *d ^= *a; *d = rotate_left(*d,16);
+
+	*c += *d; *b ^= *c; *b = rotate_left(*b,12);
+
+	*a += *b; *d ^= *a; *d = rotate_left(*d,8);
+
+	*c += *d; *b ^= *c; *b = rotate_left(*b,7);
+}
+
 static int __init chacha20_init(void)	{
 	
 	unsigned int x = 0x7998bfda;
