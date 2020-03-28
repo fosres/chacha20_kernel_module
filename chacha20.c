@@ -60,6 +60,30 @@ void quarteround(unsigned int *a,unsigned int *b,unsigned int *c,unsigned int *d
 	*c += *d; *b ^= *c; *b = rotate_left(*b,7);
 }
 
+unsigned int reverse(unsigned int in)	{
+	
+	unsigned out = 0;
+
+	unsigned int i = 0;
+
+	while ( i < 3 )			{
+		
+		out += (in & 0xff);
+
+		out <<= 8;
+
+		in >>= 8;
+
+		i++;
+
+	}
+
+	out |= (in & 0xff);
+
+	return out;
+
+}
+
 void chacha20_state_init(unsigned int * state,unsigned int * key,unsigned int * nonce,unsigned int block)	{
 #if 0	
 	get_random_bytes(key,sizeof(unsigned int)*8);
@@ -100,7 +124,7 @@ void chacha20_state_init(unsigned int * state,unsigned int * key,unsigned int * 
 static int __init chacha20_init(void)	{
 	
 	unsigned int * key = (unsigned int*)kzalloc(sizeof(unsigned int)*8,GFP_KERNEL);
-
+	
 	unsigned long long int i = 0;
 
 	unsigned long long int dif = 0x04050607 - 0x00010203;
@@ -109,7 +133,7 @@ static int __init chacha20_init(void)	{
 
 	i++;
 
-	while ( i < 16 	)	{
+	while ( i < 8 	)	{
 		
 		key[i] = key[i-1] + dif;
 
