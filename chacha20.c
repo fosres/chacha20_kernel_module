@@ -3,6 +3,7 @@
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/random.h>
+#include <linux/string.h>
 #include <linux/fs.h>
 #include <asm/segment.h>
 #include <asm/uaccess.h>
@@ -121,9 +122,11 @@ void chacha20_state_init(unsigned int * state,unsigned int * key,unsigned int * 
 	}
 }
 
-void block_function(unsigned int * state_orig,unsigned int * state)	{
+void block_function(unsigned int * state)	{
 	
 	unsigned long long int i = 0;
+	
+	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
 
 	memcpy(state_orig,state,sizeof(unsigned int)*16);
 
@@ -157,6 +160,8 @@ void block_function(unsigned int * state_orig,unsigned int * state)	{
 		i++;
 	}
 
+	kfree(state_orig);
+
 }
 
 void state_to_ksm(unsigned char *ksm,unsigned int * state)	{
@@ -172,6 +177,90 @@ void state_to_ksm(unsigned char *ksm,unsigned int * state)	{
 		i++; j += 4;
 	}
 
+}
+ 
+void chacha20(const char * dest,const char *path,unsigned int * state,unsigned char * ksm_arr)	{
+	
+	struct file * filp = filp_open(path,O_RDONLY,S_IRUSR);
+
+	struct file * wilp = filp_open(dest,O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU|S_IRWXG|S_IRWXO);
+
+	if (!filp)	{
+		
+		printk(KERN_ALERT "Error: Failed to open file");
+
+		return;
+	}
+
+	unsigned long long int file_size = vfs_llseek(filp,0,SEEK_END);
+
+	unsigned long long int block_i = 1;
+
+	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
+
+	memcpy(state_orig,state,sizeof(unsigned int)*16);
+
+	loff_t * pos = (loff_t *)kzalloc(sizeof(loff_t),GFP_KERNEL);
+
+	loff_t * outset = (loff_t *)kzalloc(sizeof(loff_t),GFP_KERNEL);
+
+	unsigned char * arr = (unsigned char *)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
+
+	unsigned long long int i = 0, n = 0;
+	
+	while ( n < file_size )	{
+		
+		memset(state,0x0,sizeof(unsigned int)*16);
+
+		memcpy(state,state_orig,sizeof(unsigned int)*16);
+
+		state[12] = block_i;
+
+		block_function(state);
+
+		memset(ksm_arr,0x0,sizeof(unsigned char)*64);
+
+		state_to_ksm(ksm_arr,state);
+
+		i = 0;
+
+		printk(KERN_ALERT "Keystream for block %llu:",block_i);
+
+		while ( i < 64 )		{
+			
+			printk(KERN_CONT "%.2x:",ksm_arr[i]);
+
+			i++;
+		}
+
+		kernel_read(filp,arr,sizeof(unsigned char)*64,pos);
+
+		i = 0;
+
+		while ( ( i < 64 ) && ( n < file_size) )	{
+			
+			arr[i] ^= ksm_arr[i];
+
+			kernel_write(wilp,&arr[i],sizeof(unsigned char),outset);
+
+			i++;n++;
+		}
+	
+		block_i++;
+
+	}
+	
+	filp_close(filp,NULL);
+
+	filp_close(wilp,NULL);
+
+	kfree(state_orig);
+
+	kfree(pos);
+
+	kfree(outset);
+
+	kfree(arr);
 }
 
 static int __init chacha20_init(void)	{
@@ -192,12 +281,23 @@ static int __init chacha20_init(void)	{
 
 		i++;
 	}
+
+	i = 0;
+	
+	printk(KERN_ALERT "Printing contents of key:");
+
+	while ( i < 8 )	{
+		
+		printk(KERN_ALERT "%.4x",key[i]);
+
+		i++;
+	}
 	
 	unsigned int * nonce = (unsigned int*)kzalloc(sizeof(unsigned int)*3,GFP_KERNEL);
 
 	i = 0;
 
-	nonce[0] = 0x00000009;
+	nonce[0] = 0x00000000;
 
 	nonce[1] = 0x0000004a;
 
@@ -209,11 +309,9 @@ static int __init chacha20_init(void)	{
 
 	chacha20_state_init(state,key,nonce,1);
 
-	block_function(state_orig,state);
+	printk(KERN_ALERT "First block setup:");
 
 	i = 0;
-	
-	printk(KERN_ALERT "state after:");
 
 	while ( i < 16 )	{
 		
@@ -221,21 +319,27 @@ static int __init chacha20_init(void)	{
 
 		i++;
 	}
-	
-	unsigned char * ksm = (unsigned char*)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
-	
-	state_to_ksm(ksm,state);
-	
+
+	printk(KERN_ALERT "%.4x",state[15]);
+
+	block_function(state);
+
 	i = 0;
 	
-	printk(KERN_ALERT "Contents of ksm:");
+	printk(KERN_ALERT "First block after block operation:");
 
-	while ( i < 64 )	{
+	while ( i < 16 )	{
 		
-		printk(KERN_ALERT "%.2x",ksm[i]);
+		printk(KERN_ALERT "%.4x",state[i]);
 
 		i++;
 	}
+
+	printk(KERN_ALERT "%.4x",state[15]);
+	
+	unsigned char * ksm = (unsigned char*)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
+
+	chacha20("test.out.txt","test.txt",state,ksm);
 	
 	kfree(ksm);
 
