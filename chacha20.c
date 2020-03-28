@@ -308,7 +308,7 @@ static int __init chacha20_init(void)	{
 	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
 
 	chacha20_state_init(state,key,nonce,1);
-
+#if 0
 	printk(KERN_ALERT "First block setup:");
 
 	i = 0;
@@ -319,8 +319,6 @@ static int __init chacha20_init(void)	{
 
 		i++;
 	}
-
-	printk(KERN_ALERT "%.4x",state[15]);
 
 	block_function(state);
 
@@ -334,9 +332,7 @@ static int __init chacha20_init(void)	{
 
 		i++;
 	}
-
-	printk(KERN_ALERT "%.4x",state[15]);
-	
+#endif	
 	unsigned char * ksm = (unsigned char*)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
 
 	chacha20("test.out.txt","test.txt",state,ksm);
