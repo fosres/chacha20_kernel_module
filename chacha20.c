@@ -121,6 +121,44 @@ void chacha20_state_init(unsigned int * state,unsigned int * key,unsigned int * 
 	}
 }
 
+void block_function(unsigned int * state_orig,unsigned int * state)	{
+	
+	unsigned long long int i = 0;
+
+	memcpy(state_orig,state,sizeof(unsigned int)*16);
+
+	while ( i < 10 )	{
+		
+		quarteround(&state[0],&state[4],&state[8],&state[12]);
+
+		quarteround(&state[1],&state[5],&state[9],&state[13]);
+
+		quarteround(&state[2],&state[6],&state[10],&state[14]);
+
+		quarteround(&state[3],&state[7],&state[11],&state[15]);
+		
+		quarteround(&state[0],&state[5],&state[10],&state[15]);
+
+		quarteround(&state[1],&state[6],&state[11],&state[12]);
+
+		quarteround(&state[2],&state[7],&state[8],&state[13]);
+
+		quarteround(&state[3],&state[4],&state[9],&state[14]);
+
+		i++;
+	}
+
+	i = 0;
+
+	while ( i < 16 )	{
+		
+		state[i] += state_orig[i];
+
+		i++;
+	}
+
+}
+
 static int __init chacha20_init(void)	{
 	
 	unsigned int * key = (unsigned int*)kzalloc(sizeof(unsigned int)*8,GFP_KERNEL);
@@ -151,8 +189,12 @@ static int __init chacha20_init(void)	{
 	nonce[2] = 0x00000000;
 
 	unsigned int * state = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
+	
+	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
 
 	chacha20_state_init(state,key,nonce,1);
+	
+	printk(KERN_ALERT "state before:");
 
 	i = 0;
 
@@ -161,10 +203,26 @@ static int __init chacha20_init(void)	{
 		printk(KERN_ALERT "%.4x",state[i]);
 
 		i++;
+	}
 
+	block_function(state_orig,state);
+	
+	printk(KERN_ALERT "state after:");
+
+	i = 0;
+
+	while ( i < 16 )	{
+		
+		printk(KERN_ALERT "%.4x",state[i]);
+
+		i++;
 	}
 	
+	printk(KERN_ALERT "%.4x",state[15]);
+
 	kfree(state);
+
+	kfree(state_orig);
 
 	kfree(key);
 
