@@ -307,10 +307,20 @@ static int __init chacha20_init(void)	{
 	
 	unsigned int * state_orig = (unsigned int*)kzalloc(sizeof(unsigned int)*16,GFP_KERNEL);
 
+	memcpy(state_orig,state,sizeof(unsigned int)*16);
+
 	chacha20_state_init(state,key,nonce,1);
 	
 	unsigned char * ksm = (unsigned char*)kzalloc(sizeof(unsigned char)*64,GFP_KERNEL);
 
+	chacha20("test.out.txt","test.txt",state,ksm);
+
+	memset(state,0x0,sizeof(unsigned int)*16);
+
+	memcpy(state,state_orig,sizeof(unsigned int)*16);
+
+	chacha20_state_init(state,key,nonce,1);
+	
 	chacha20("test.out.txt.recover","test.out.txt",state,ksm);
 	
 	kfree(ksm);
