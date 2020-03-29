@@ -280,7 +280,7 @@ void reverse_string(unsigned char *s,unsigned long long int n)	{
 	
 	unsigned char temp = 0;
 
-	unsigned long long int i = 0, j = n - 1;
+	unsigned long long int i = 0, j = n-1;
 
 	while ( i < j )		{
 		
@@ -418,13 +418,14 @@ static int __init chacha20_init(void)	{
 
 	while ( i < 256 )	{
 		
-		printk(KERN_CONT "%c",bitarr[i]);
 
-		if ( i % 8 == 0 )	{
+		if ( (i % 8 == 0) && (i != 0) )	{
 			
 			printk(KERN_CONT "%c",'|');	
 
 		}
+		
+		printk(KERN_CONT "%c",bitarr[i]);
 
 		i++;
 
