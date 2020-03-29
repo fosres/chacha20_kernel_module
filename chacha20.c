@@ -263,6 +263,75 @@ void chacha20(const char * dest,const char *path,unsigned int * state,unsigned c
 	kfree(arr);
 }
 
+const unsigned char * hextable[16] = 
+
+{
+	"0000","0001","0010","0011",
+	
+	"0100","0101","0110","0111",
+
+	"1000","1001","1010","1011",
+
+	"1100","1101","1110","1111"
+
+};
+
+void reverse_string(unsigned char *s,unsigned long long int n)	{
+	
+	unsigned char temp = 0;
+
+	unsigned long long int i = 0, j = strnlen(s,sizeof(unsigned char)*n);
+
+	while ( i < j )		{
+		
+		temp = s[i]; s[i] = s[j];
+
+		s[j] = temp; i++; j--;
+
+	}
+
+}
+
+// size of key is 8 32-bit unsigned integers; out is 256 bytes
+
+
+void key_to_bitarr(unsigned char * out,unsigned int * key)	{
+	
+	unsigned long long int i = 0; unsigned int kval = 0;
+
+	unsigned int * k_p = &key[7];
+
+	unsigned char * o_p = out;
+
+	unsigned char temp = 0;
+
+	unsigned char x[5] = {0};
+
+	while ( k_p >= key )				{
+		
+		kval = *k_p;
+
+		while ( kval > 0 )		{
+			
+			temp = kval & 0xf;
+
+			memcpy(x,hextable[temp],sizeof(unsigned char)*4);
+
+			reverse_string(x,4);
+
+			memcpy(o_p,x,sizeof(unsigned char)*4);
+
+			o_p += 4;
+
+			kval >>= 4;
+		}
+
+		k_p--;
+	}
+
+}
+
+
 static int __init chacha20_init(void)	{
 	
 	unsigned int * key = (unsigned int*)kzalloc(sizeof(unsigned int)*8,GFP_KERNEL);
@@ -322,7 +391,39 @@ static int __init chacha20_init(void)	{
 	chacha20_state_init(state,key,nonce,1);
 	
 	chacha20("test.out.txt.recover","test.out.txt",state,ksm);
+
+	unsigned char x[8] = {0};
+
+	memcpy(x,hextable[14],sizeof(unsigned char)*4);
+
+	printk(KERN_ALERT "x:%s",x);
+
+	unsigned char * bitarr = (unsigned char*)kzalloc(sizeof(unsigned char)*256,GFP_KERNEL);
 	
+	key_to_bitarr(bitarr,key);
+
+	i = 0; 
+	
+	printk(KERN_ALERT "Contents of bitarr:");
+
+	while ( i < 256 )	{
+		
+		printk(KERN_CONT "%c",bitarr[i]);
+
+		if ( i % 8 == 0 )	{
+			
+			printk(KERN_CONT "%c",'|');	
+
+		}
+
+		i++;
+
+	}
+
+	i = 0;
+	
+	kfree(bitarr);
+
 	kfree(ksm);
 
 	kfree(state);
