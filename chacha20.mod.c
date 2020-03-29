@@ -27,8 +27,6 @@ __used
 __attribute__((section("__versions"))) = {
 	{ 0x2f398466, "module_layout" },
 	{ 0xdb7305a1, "__stack_chk_fail" },
-	{ 0xcbd4898c, "fortify_panic" },
-	{ 0xa916b694, "strnlen" },
 	{ 0x5a4001dd, "kernel_write" },
 	{ 0x335cef9e, "kernel_read" },
 	{ 0x4073ce38, "filp_close" },
@@ -47,4 +45,4 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "9435CB95E0591FA81D94A96");
+MODULE_INFO(srcversion, "6613A0AAACC97154DC85230");

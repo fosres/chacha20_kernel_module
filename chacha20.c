@@ -280,7 +280,7 @@ void reverse_string(unsigned char *s,unsigned long long int n)	{
 	
 	unsigned char temp = 0;
 
-	unsigned long long int i = 0, j = strnlen(s,sizeof(unsigned char)*n);
+	unsigned long long int i = 0, j = n - 1;
 
 	while ( i < j )		{
 		
@@ -297,7 +297,9 @@ void reverse_string(unsigned char *s,unsigned long long int n)	{
 
 void key_to_bitarr(unsigned char * out,unsigned int * key)	{
 	
-	unsigned long long int i = 0; unsigned int kval = 0;
+	unsigned long long int i = 0, j = 0; 
+
+	unsigned int kval = 0;
 
 	unsigned int * k_p = &key[7];
 
@@ -311,19 +313,27 @@ void key_to_bitarr(unsigned char * out,unsigned int * key)	{
 		
 		kval = *k_p;
 
-		while ( kval > 0 )		{
+		j = 0;
+
+		while ( j < 8 )		{
 			
 			temp = kval & 0xf;
 
 			memcpy(x,hextable[temp],sizeof(unsigned char)*4);
 
+			printk(KERN_ALERT "Before reverse:%s",x);
+
 			reverse_string(x,4);
+			
+			printk(KERN_ALERT "After reverse:%s",x);
 
 			memcpy(o_p,x,sizeof(unsigned char)*4);
 
 			o_p += 4;
 
 			kval >>= 4;
+
+			j++;
 		}
 
 		k_p--;
